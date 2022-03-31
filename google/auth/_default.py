@@ -36,6 +36,7 @@ _AUTHORIZED_USER_TYPE = "authorized_user"
 _SERVICE_ACCOUNT_TYPE = "service_account"
 _EXTERNAL_ACCOUNT_TYPE = "external_account"
 _IMPERSONATED_SERVICE_ACCOUNT_TYPE = "impersonated_service_account"
+_GDCH_TYPE = "gdch"
 _VALID_TYPES = (
     _AUTHORIZED_USER_TYPE,
     _SERVICE_ACCOUNT_TYPE,
@@ -158,6 +159,8 @@ def _load_credentials_from_info(
         credentials, project_id = _get_impersonated_service_account_credentials(
             filename, info, scopes
         )
+    elif credential_type == _GDCH_TYPE:
+        credentials, project_id = _get_gdch_credentials(info)
     else:
         raise exceptions.DefaultCredentialsError(
             "The file {file} does not have a valid type. "
@@ -340,6 +343,8 @@ def _get_external_account_credentials(
                 "Failed to load external account credentials from {}".format(filename)
             )
     if request is None:
+        import google.auth.transport.requests
+
         request = google.auth.transport.requests.Request()
 
     return credentials, credentials.get_project_id(request=request)
@@ -417,6 +422,30 @@ def _get_impersonated_service_account_credentials(filename, info, scopes):
         new_exc = exceptions.DefaultCredentialsError(msg, caught_exc)
         six.raise_from(new_exc, caught_exc)
     return credentials, None
+
+
+def _get_gdch_credentials(info):
+    from google.oauth2 import gdch_credentials
+
+    k8s_ca_cert_path = info.get("k8s_ca_cert_path")
+    k8s_cert_path = info.get("k8s_cert_path")
+    k8s_key_path = info.get("k8s_key_path")
+    k8s_token_endpoint = info.get("k8s_token_endpoint")
+    ais_ca_cert_path = info.get("ais_ca_cert_path")
+    ais_token_endpoint = info.get("ais_token_endpoint")
+
+    return (
+        gdch_credentials.Credentials(
+            k8s_ca_cert_path,
+            k8s_cert_path,
+            k8s_key_path,
+            k8s_token_endpoint,
+            ais_ca_cert_path,
+            ais_token_endpoint,
+            None,
+        ),
+        None,
+    )
 
 
 def _apply_quota_project_id(credentials, quota_project_id):

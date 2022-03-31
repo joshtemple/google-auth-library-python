@@ -79,7 +79,7 @@ def _parse_expiry(response_data):
 
 
 def _token_endpoint_request_no_throw(
-    request, token_uri, body, access_token=None, use_json=False
+    request, token_uri, body, access_token=None, use_json=False, cert=None, verify=None
 ):
     """Makes a request to the OAuth 2.0 authorization server's token endpoint.
     This function doesn't throw on response errors.
@@ -93,6 +93,8 @@ def _token_endpoint_request_no_throw(
         access_token (Optional(str)): The access token needed to make the request.
         use_json (Optional(bool)): Use urlencoded format or json format for the
             content type. The default value is False.
+        cert (Optional(Tuple[str, str])): The (cert_path, key_path) tuple for mTLS.
+        verify (Optional(str)): The CA cert path for server side TLS cert verification.
 
     Returns:
         Tuple(bool, Mapping[str, str]): A boolean indicating if the request is
@@ -112,7 +114,14 @@ def _token_endpoint_request_no_throw(
     # retry to fetch token for maximum of two times if any internal failure
     # occurs.
     while True:
-        response = request(method="POST", url=token_uri, headers=headers, body=body)
+        response = request(
+            method="POST",
+            url=token_uri,
+            headers=headers,
+            body=body,
+            cert=cert,
+            verify=verify,
+        )
         response_body = (
             response.data.decode("utf-8")
             if hasattr(response.data, "decode")
@@ -137,7 +146,7 @@ def _token_endpoint_request_no_throw(
 
 
 def _token_endpoint_request(
-    request, token_uri, body, access_token=None, use_json=False
+    request, token_uri, body, access_token=None, use_json=False, cert=None, verify=None
 ):
     """Makes a request to the OAuth 2.0 authorization server's token endpoint.
 
@@ -150,6 +159,8 @@ def _token_endpoint_request(
         access_token (Optional(str)): The access token needed to make the request.
         use_json (Optional(bool)): Use urlencoded format or json format for the
             content type. The default value is False.
+        cert (Optional(Tuple[str, str])): The (cert_path, key_path) tuple for mTLS.
+        verify (Optional(str)): The CA cert path for server side TLS cert verification.
 
     Returns:
         Mapping[str, str]: The JSON-decoded response data.
@@ -159,7 +170,13 @@ def _token_endpoint_request(
             an error.
     """
     response_status_ok, response_data = _token_endpoint_request_no_throw(
-        request, token_uri, body, access_token=access_token, use_json=use_json
+        request,
+        token_uri,
+        body,
+        access_token=access_token,
+        use_json=use_json,
+        cert=cert,
+        verify=verify,
     )
     if not response_status_ok:
         _handle_error_response(response_data)
