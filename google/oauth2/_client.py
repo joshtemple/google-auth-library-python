@@ -44,11 +44,13 @@ def _handle_error_response(response_data):
     """Translates an error response into an exception.
 
     Args:
-        response_data (Mapping): The decoded response data.
+        response_data (Mapping | str): The decoded response data.
 
     Raises:
         google.auth.exceptions.RefreshError: The errors contained in response_data.
     """
+    if isinstance(response_data, str):
+        raise exceptions.RefreshError(response_data)
     try:
         error_details = "{}: {}".format(
             response_data["error"], response_data.get("error_description")
