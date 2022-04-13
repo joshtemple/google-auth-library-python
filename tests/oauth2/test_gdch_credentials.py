@@ -16,6 +16,7 @@ import datetime
 
 import mock
 import pytest
+from six.moves import http_client
 
 from google.auth import exceptions
 from google.oauth2 import gdch_credentials
@@ -78,6 +79,7 @@ class TestCredentials(object):
             True,
             (creds._k8s_cert_path, creds._k8s_key_path),
             creds._k8s_ca_cert_path,
+            http_client.CREATED,
         )
 
     @mock.patch("google.oauth2._client._token_endpoint_request", autospec=True)

@@ -160,6 +160,19 @@ def test__token_endpoint_request_internal_failure_error():
         )
 
 
+def test__token_endpoint_request_expected_status_code():
+    request = make_request({}, status=http_client.CREATED)
+
+    # It doesn't throw if the response code is the expected one.
+    _client._token_endpoint_request(
+        request, "http://example.com", {}, expected_status_code=http_client.CREATED
+    )
+
+    # It throws since the default status code is 200 OK, but we are expecting 201 CREATED.
+    with pytest.raises(exceptions.RefreshError):
+        _client._token_endpoint_request(request, "http://example.com", {})
+
+
 def verify_request_params(request, params):
     request_body = request.call_args[1]["body"].decode("utf-8")
     request_params = urllib.parse.parse_qs(request_body)

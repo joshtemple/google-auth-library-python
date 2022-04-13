@@ -15,6 +15,7 @@
 """Experimental GDC-H credentials support."""
 
 import six
+from six.moves import http_client
 
 from google.auth import _helpers
 from google.auth import credentials
@@ -75,6 +76,7 @@ class Credentials(credentials.CredentialsWithQuotaProject):
             True,
             (self._k8s_cert_path, self._k8s_key_path),
             self._k8s_ca_cert_path,
+            http_client.CREATED,
         )
 
         try:
