@@ -56,13 +56,22 @@ def test__handle_error_response():
     assert excinfo.match(r"help: I\'m alive")
 
 
-def test__handle_error_response_non_json():
+def test__handle_error_response_no_error():
     response_data = {"foo": "bar"}
 
     with pytest.raises(exceptions.RefreshError) as excinfo:
         _client._handle_error_response(response_data)
 
     assert excinfo.match(r"{\"foo\": \"bar\"}")
+
+
+def test__handle_error_response_not_json():
+    response_data = "this is an error message"
+
+    with pytest.raises(exceptions.RefreshError) as excinfo:
+        _client._handle_error_response(response_data)
+
+    assert excinfo.match(response_data)
 
 
 @mock.patch("google.auth._helpers.utcnow", return_value=datetime.datetime.min)
@@ -158,6 +167,18 @@ def test__token_endpoint_request_internal_failure_error():
         _client._token_endpoint_request(
             request, "http://example.com", {"error": "internal_failure"}
         )
+
+
+def test__token_endpoint_request_string_error():
+    response = mock.create_autospec(transport.Response, instance=True)
+    response.status = http_client.BAD_REQUEST
+    response.data = "this is an error message"
+    request = mock.create_autospec(transport.Request)
+    request.return_value = response
+
+    with pytest.raises(exceptions.RefreshError) as excinfo:
+        _client._token_endpoint_request(request, "http://example.com", {})
+    assert excinfo.match("this is an error message")
 
 
 def test__token_endpoint_request_expected_status_code():

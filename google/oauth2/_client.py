@@ -145,7 +145,7 @@ def _token_endpoint_request_no_throw(
             response_data = json.loads(response_body)
             break
         else:
-            # For failed response, response_body may not be a JSON
+            # For failed response, response_body could be a string
             try:
                 response_data = json.loads(response_body)
                 error_desc = response_data.get("error_description") or ""
