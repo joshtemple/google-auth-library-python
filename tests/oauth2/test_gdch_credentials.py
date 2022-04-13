@@ -109,7 +109,9 @@ class TestCredentials(object):
         }
         utcnow.return_value = datetime.datetime(2022, 1, 1, 0, 0, 0)
 
-        ais_token, ais_expiry = creds._make_ais_token_request("k8s_token", req)
+        k8s_token = "k8s_token"
+        base64_k8s_token = "azhzX3Rva2Vu"
+        ais_token, ais_expiry = creds._make_ais_token_request(k8s_token, req)
         assert ais_token == "ais_token"
         assert ais_expiry == datetime.datetime(2022, 1, 1, 0, 59, 59)
         token_endpoint_request.assert_called_with(
@@ -119,7 +121,7 @@ class TestCredentials(object):
                 "grant_type": gdch_credentials.TOKEN_EXCHANGE_TYPE,
                 "audience": creds._audience,
                 "requested_token_type": gdch_credentials.ACCESS_TOKEN_TOKEN_TYPE,
-                "subject_token": "k8s_token",
+                "subject_token": base64_k8s_token,
                 "subject_token_type": gdch_credentials.SERVICE_ACCOUNT_TOKEN_TYPE,
             },
             None,

@@ -14,6 +14,8 @@
 
 """Experimental GDC-H credentials support."""
 
+import base64
+
 import six
 from six.moves import http_client
 
@@ -90,6 +92,8 @@ class Credentials(credentials.CredentialsWithQuotaProject):
             six.raise_from(new_exc, caught_exc)
 
     def _make_ais_token_request(self, k8s_token, request):
+        k8s_token = base64.b64encode(k8s_token.encode()).decode()
+
         # send a request to AIS token point with the k8s token
         ais_request_body = {
             "grant_type": TOKEN_EXCHANGE_TYPE,

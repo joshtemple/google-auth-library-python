@@ -137,19 +137,25 @@ def _token_endpoint_request_no_throw(
             if hasattr(response.data, "decode")
             else response.data
         )
-        response_data = json.loads(response_body)
 
         if response.status == expected_status_code:
+            # response_body should be a JSON
+            response_data = json.loads(response_body)
             break
         else:
-            error_desc = response_data.get("error_description") or ""
-            error_code = response_data.get("error") or ""
-            if (
-                any(e == "internal_failure" for e in (error_code, error_desc))
-                and retry < 1
-            ):
-                retry += 1
-                continue
+            # For failed response, response_body may not be a JSON
+            try:
+                response_data = json.loads(response_body)
+                error_desc = response_data.get("error_description") or ""
+                error_code = response_data.get("error") or ""
+                if (
+                    any(e == "internal_failure" for e in (error_code, error_desc))
+                    and retry < 1
+                ):
+                    retry += 1
+                    continue
+            except json.decoder.JSONDecodeError:
+                response_data = response_body
             return response.status == expected_status_code, response_data
 
     return response.status == expected_status_code, response_data
